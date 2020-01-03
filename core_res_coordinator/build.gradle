@@ -1,0 +1,37 @@
+apply plugin: 'com.android.library'
+
+apply from: '../dependencies.gradle'
+
+android {
+    compileSdkVersion versions.compileSdk
+    buildToolsVersion versions.buildTools
+
+    defaultConfig {
+        minSdkVersion versions.minimumSdk
+        targetSdkVersion versions.targetSdk
+
+        testInstrumentationRunner libraries.test_instrumentation_runner
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    api internalmodules.base
+    implementation internalmodules.core
+    implementation internalmodules.data_local
+    implementation internalmodules.data_user
+    implementation libraries.support_library
+    implementation libraries.support_library_constraintlayout
+
+    implementation libraries.dagger
+    annotationProcessor libraries.dagger_compiler
+
+    testImplementation libraries.junit
+    androidTestImplementation libraries.androidx_junit
+    androidTestImplementation libraries.androidx_espresso
+}
