@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':base', ':core', ':data_local', ':core_res_coordinator', ':data_user', ':feature_home'
 rootProject.name='Modularization'
