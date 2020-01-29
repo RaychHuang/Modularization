@@ -4,17 +4,20 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
 
 public abstract class BaseDataCell<State> implements DataCell<State> {
     private final BehaviorSubject<State> mStatePublisher = BehaviorSubject.create();
-    private final Subject<Object> mIntentPublisher = PublishSubject.create();
+    private final PublishSubject<Object> mIntentPublisher = PublishSubject.create();
     private final CompositeDisposable mDisposables = new CompositeDisposable();
 
     private Seed<State> mSeed;
@@ -29,24 +32,25 @@ public abstract class BaseDataCell<State> implements DataCell<State> {
             return;
         }
 
-        Scheduler scheduler = createSingleScheduler();
+        Scheduler scheduler = createScheduler();
+        int cacheNumber = 16;
         Callable<State> initialState = null;
+        Function<Object, ObservableSource<Reducer<State>>> handler = null;
         mSeed.seed(mIntentPublisher);
 
         ConnectableObservable<Reducer<State>> reducers = mIntentPublisher
                 .doOnSubscribe(mDisposables::add)
                 .observeOn(scheduler)
-                .concatMap()
-                .observeOn(scheduler)
+                .concatMap(this::handleIntent, cacheNumber)
                 .publish();
 
         reducers
-                .doOnSubscribe(mDisposables::add)
-                .scanWith(initialState, (oldState, reducer) -> reducer.reduce(oldState))
+                .observeOn(scheduler)
+                .scanWith(initialState, this::handleReducer)
                 .distinctUntilChanged()
                 .subscribe(mStatePublisher);
 
-        reducers.connect();
+        reducers.connect(mDisposables::add);
     }
 
     @Override
@@ -69,9 +73,23 @@ public abstract class BaseDataCell<State> implements DataCell<State> {
         return mStatePublisher;
     }
 
-    protected Scheduler createSingleScheduler() {
-        String name = "DataCell - " + this.getClass().getSimpleName();
+    protected String getName() {
+        return this.getClass().getSimpleName();
+    }
+
+    protected Scheduler createScheduler() {
+        String name = "DataCellThread - " + this.getClass().getSimpleName();
         return Schedulers.from(Executors.newSingleThreadExecutor(
                 runnable -> new Thread(runnable, name)));
+    }
+
+    protected ObservableSource<Reducer<State>> handleIntent(Object intent) {
+        return null;
+    }
+
+    protected State handleReducer(State oldState, Reducer<State> reducer) {
+        State newState = reducer.reduce(oldState);
+//        Log.d(getName(), "oldState: " + oldState + ", newState: " + newState);
+        return newState;
     }
 }
