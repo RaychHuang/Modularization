@@ -2,15 +2,13 @@ package com.ray.utopia.datacell;
 
 import io.reactivex.Observable;
 
-public interface DataCell<State> {
+public interface DataCell<State, Message> {
 
-    void start();
+    <INTENT> void deliverIntent(INTENT intent);
 
-    void stop();
+    State getState();
 
-    <Intent> void sendIntent(Intent intent);
+    Observable<State> listenState();
 
-    State getCurrentState();
-
-    Observable<State> getState();
+    Observable<Message> listenMessage();
 }

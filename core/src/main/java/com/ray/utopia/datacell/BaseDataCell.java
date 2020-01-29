@@ -7,17 +7,16 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
-public abstract class BaseDataCell<State> implements DataCell<State> {
-    private final BehaviorSubject<State> mStatePublisher = BehaviorSubject.create();
+public abstract class BaseDataCell<State, Message> implements DataCell<State, Message> {
     private final PublishSubject<Object> mIntentPublisher = PublishSubject.create();
+    private final BehaviorSubject<State> mStatePublisher = BehaviorSubject.create();
+    private final PublishSubject<Message> mMessagePublisher = PublishSubject.create();
     private final CompositeDisposable mDisposables = new CompositeDisposable();
 
     private Seed<State> mSeed;
@@ -26,7 +25,6 @@ public abstract class BaseDataCell<State> implements DataCell<State> {
         this.mSeed = seed;
     }
 
-    @Override
     public synchronized void start() {
         if (mSeed == null) {
             return;
@@ -53,24 +51,28 @@ public abstract class BaseDataCell<State> implements DataCell<State> {
         reducers.connect(mDisposables::add);
     }
 
-    @Override
     public synchronized void stop() {
         mDisposables.clear();
     }
 
     @Override
-    public <Intent> void sendIntent(Intent intent) {
+    public <INTENT> void deliverIntent(INTENT intent) {
         mIntentPublisher.onNext(intent);
     }
 
     @Override
-    public State getCurrentState() {
+    public State getState() {
         return mStatePublisher.getValue();
     }
 
     @Override
-    public Observable<State> getState() {
+    public Observable<State> listenState() {
         return mStatePublisher;
+    }
+
+    @Override
+    public Observable<Message> listenMessage() {
+        return mMessagePublisher;
     }
 
     protected String getName() {
