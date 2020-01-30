@@ -2,7 +2,7 @@ package com.ray.utopia.datacell;
 
 import io.reactivex.Observable;
 
-public interface DataCellConsole<State, Message> extends DataCell<State, Message> {
+public interface DataCellShell<State, Message> extends DataCell<State, Message> {
 
     Observable<Object> listenIntent();
 
