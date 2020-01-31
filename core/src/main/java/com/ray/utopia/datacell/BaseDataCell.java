@@ -15,6 +15,7 @@ import io.reactivex.subjects.PublishSubject;
 
 public abstract class BaseDataCell<State, Message> implements DataCell<State, Message> {
     private final PublishSubject<Object> mIntentPublisher = PublishSubject.create();
+    private final PublishSubject<Reducer<State>> mReducerPublisher = PublishSubject.create();
     private final BehaviorSubject<State> mStatePublisher = BehaviorSubject.create();
     private final PublishSubject<Message> mMessagePublisher = PublishSubject.create();
     private final CompositeDisposable mDisposables = new CompositeDisposable();
@@ -80,7 +81,7 @@ public abstract class BaseDataCell<State, Message> implements DataCell<State, Me
     }
 
     protected Scheduler createScheduler() {
-        String name = "DataCellThread - " + this.getClass().getSimpleName();
+        String name = "DataCellThread - " + getName();
         return Schedulers.from(Executors.newSingleThreadExecutor(
                 runnable -> new Thread(runnable, name)));
     }
