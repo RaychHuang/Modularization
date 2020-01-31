@@ -1,14 +1,12 @@
 package com.ray.utopia.datacell;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Scheduler;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Function;
-import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
@@ -20,36 +18,28 @@ public abstract class BaseDataCell<State, Message> implements DataCell<State, Me
     private final PublishSubject<Message> mMessagePublisher = PublishSubject.create();
     private final CompositeDisposable mDisposables = new CompositeDisposable();
 
-    private Seed<State> mSeed;
+    private final Middleware<State, Message> mMiddleware;
 
-    public BaseDataCell(Seed<State> seed) {
-        this.mSeed = seed;
+    public BaseDataCell(@NonNull Middleware<State, Message> middleware) {
+        this.mMiddleware = middleware;
     }
 
     public synchronized void start() {
-        if (mSeed == null) {
-            return;
+        Scheduler scheduler = createScheduler();
+        DataCellShellImpl<State, Message> shell = new DataCellShellImpl<>(
+                mIntentPublisher, mReducerPublisher, mStatePublisher, mMessagePublisher);
+
+        for (Seed<State, Message> seed : mMiddleware.getSeeds()) {
+            seed.plant(shell);
         }
 
-        Scheduler scheduler = createScheduler();
-        int cacheNumber = 16;
-        Callable<State> initialState = null;
-        Function<Object, ObservableSource<Reducer<State>>> handler = null;
-        mSeed.seed(mIntentPublisher);
-
-        ConnectableObservable<Reducer<State>> reducers = mIntentPublisher
-                .doOnSubscribe(mDisposables::add)
+        mReducerPublisher
                 .observeOn(scheduler)
-                .concatMap(this::handleIntent, cacheNumber)
-                .publish();
-
-        reducers
-                .observeOn(scheduler)
-                .scanWith(initialState, this::handleReducer)
+                .scanWith(mMiddleware.getInitialState(), this::handleReducer)
                 .distinctUntilChanged()
                 .subscribe(mStatePublisher);
 
-        reducers.connect(mDisposables::add);
+        mDisposables.add(shell);
     }
 
     public synchronized void stop() {

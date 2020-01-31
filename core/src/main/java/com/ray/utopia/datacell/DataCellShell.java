@@ -8,5 +8,5 @@ public interface DataCellShell<State, Message> extends DataCell<State, Message> 
 
     void deliverReducer(Reducer<State> reducer);
 
-    void deliverSideEffect(Reducer<State> reducer);
+    void deliverMessage(Message reducer);
 }

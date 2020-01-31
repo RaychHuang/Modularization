@@ -1,8 +1,6 @@
 package com.ray.utopia.datacell;
 
-import io.reactivex.Observable;
+public interface Seed<State, Message> {
 
-public interface Seed<State> {
-
-    <Intent> void seed(Observable<Intent> intent);
+    void plant(DataCellShell<State, Message> shell);
 }
