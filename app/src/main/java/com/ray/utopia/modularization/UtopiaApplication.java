@@ -9,7 +9,7 @@ public class UtopiaApplication extends BaseApplication {
     public void onCreate() {
         super.onCreate();
         // Initiate Res
-        CoreManagerInitiator.init(this);
+        CoreManagerInitiator.init(this, new BuildInfo());
         // Initiate Orbit Service
     }
 }
