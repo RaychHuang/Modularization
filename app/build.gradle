@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 apply from: '../dependencies.gradle'
 
@@ -33,13 +35,17 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation libraries.kotlin_jdk8
+
     implementation internalmodules.core
     implementation internalmodules.core_res_coordinator
     implementation internalmodules.data_user
+
+    implementation libraries.core_ktx
     implementation libraries.support_library
     implementation libraries.support_library_constraintlayout
 
+    // Test
     testImplementation libraries.junit
     androidTestImplementation libraries.androidx_junit
     androidTestImplementation libraries.androidx_espresso
