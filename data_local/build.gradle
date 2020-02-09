@@ -26,8 +26,6 @@ dependencies {
 
     implementation internalmodules.base
 
-    implementation libraries.rxjava
-
     // Test
     testImplementation libraries.junit
     androidTestImplementation libraries.androidx_junit
