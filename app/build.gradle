@@ -5,11 +5,20 @@ apply plugin: 'kotlin-android-extensions'
 apply from: '../dependencies.gradle'
 
 android {
+    def appVersionCode = (major + minor.padLeft(2, '0') + buildNumber.padLeft(3, '0')).toInteger()
+    def appVersionName = major + "." + minor + "." + buildNumber
+
+    print "Launcher Version Code: " + appVersionCode + " \n"
+    print "Launcher Version Name: " + appVersionName + " \n"
+
     compileSdkVersion versions.compileSdk
     buildToolsVersion versions.buildTools
 
     defaultConfig {
         applicationId "com.ray.utopia.modulization"
+
+        versionCode appVersionCode
+        versionName appVersionName
 
         minSdkVersion versions.minimumSdk
         targetSdkVersion versions.targetSdk
