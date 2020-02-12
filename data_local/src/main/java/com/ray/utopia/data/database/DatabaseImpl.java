@@ -1,4 +1,4 @@
-package com.ray.utopia.core.data.database;
+package com.ray.utopia.data.database;
 
 import android.content.Context;
 

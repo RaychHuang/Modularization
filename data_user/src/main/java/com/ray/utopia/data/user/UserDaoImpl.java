@@ -1,6 +1,6 @@
 package com.ray.utopia.data.user;
 
-import com.ray.utopia.core.data.database.Database;
+import com.ray.utopia.data.database.Database;
 
 public class UserDaoImpl implements UserDao {
 
