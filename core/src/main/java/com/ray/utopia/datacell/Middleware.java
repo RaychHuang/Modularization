@@ -3,20 +3,21 @@ package com.ray.utopia.datacell;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-public class Middleware<S extends State, M extends Message> {
-    private final Callable<S> initialState;
-    private final List<Seed<S, M>> seeds;
+public class Middleware<S extends State> {
 
-    public Middleware(Callable<S> state, List<Seed<S, M>> seeds) {
-        this.initialState = state;
-        this.seeds = seeds;
-    }
+  private final Callable<S> state;
+  private final List<Seed<S>> seeds;
 
-    public Callable<S> getInitialState() {
-        return initialState;
-    }
+  public Middleware(Callable<S> state, List<Seed<S>> seeds) {
+    this.state = state;
+    this.seeds = seeds;
+  }
 
-    public List<Seed<S, M>> getSeeds() {
-        return seeds;
-    }
+  Callable<S> getState() {
+    return state;
+  }
+
+  List<Seed<S>> getSeeds() {
+    return seeds;
+  }
 }
