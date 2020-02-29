@@ -11,25 +11,30 @@ import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
-public abstract class BaseDataCell<State, Message> implements DataCell<State, Message> {
+public abstract class BaseDataCell<S extends State, M extends Message> implements DataCell<S, M> {
     private final PublishSubject<Object> intentPublisher = PublishSubject.create();
-    private final PublishSubject<Reducer<State>> reducerPublisher = PublishSubject.create();
-    private final BehaviorSubject<State> statePublisher = BehaviorSubject.create();
-    private final PublishSubject<Message> messagePublisher = PublishSubject.create();
+    private final PublishSubject<Reducer<S>> reducerPublisher = PublishSubject.create();
+    private final BehaviorSubject<S> statePublisher = BehaviorSubject.create();
+    private final PublishSubject<M> messagePublisher = PublishSubject.create();
     private final CompositeDisposable disposable = new CompositeDisposable();
 
-    private final Middleware<State, Message> middleware;
+    private final Middleware<S, M> middleware;
 
-    public BaseDataCell(@NonNull Middleware<State, Message> middleware) {
+    private Scheduler scheduler;
+
+    public BaseDataCell(@NonNull Middleware<S, M> middleware) {
         this.middleware = middleware;
     }
 
     public synchronized void start() {
-        Scheduler scheduler = createScheduler();
-        DataCellShellImpl<State, Message> shell = new DataCellShellImpl<>(
+        if (scheduler == null) {
+            scheduler = createScheduler();
+        }
+
+        DataCellShellImpl<S, M> shell = new DataCellShellImpl<>(
                 intentPublisher, reducerPublisher, statePublisher, messagePublisher);
 
-        for (Seed<State, Message> seed : middleware.getSeeds()) {
+        for (Seed<S, M> seed : middleware.getSeeds()) {
             seed.plant(shell);
         }
 
@@ -52,17 +57,17 @@ public abstract class BaseDataCell<State, Message> implements DataCell<State, Me
     }
 
     @Override
-    public State getState() {
+    public S getState() {
         return statePublisher.getValue();
     }
 
     @Override
-    public Observable<State> observeState() {
+    public Observable<S> observeState() {
         return statePublisher;
     }
 
     @Override
-    public Observable<Message> observeMessage() {
+    public Observable<M> observeMessage() {
         return messagePublisher;
     }
 
@@ -75,14 +80,15 @@ public abstract class BaseDataCell<State, Message> implements DataCell<State, Me
         return Schedulers.from(Executors.newSingleThreadExecutor(r -> new Thread(r, name)));
     }
 
-    protected ObservableSource<Reducer<State>> handleIntent(Object intent) {
+    protected ObservableSource<Reducer<S>> handleIntent(Object intent) {
         return null;
     }
 
-    protected State handleReducer(State oldState, Reducer<State> reducer) {
+    protected S handleReducer(S oldState, Reducer<S> reducer) {
         try {
             return reducer.reduce(oldState);
-        } catch (Exception e) {
+        } catch (Throwable e) {
+//            messagePublisher.onNext(e);
             return oldState;
         }
     }

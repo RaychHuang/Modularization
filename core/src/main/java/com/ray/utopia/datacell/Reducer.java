@@ -1,6 +1,6 @@
 package com.ray.utopia.datacell;
 
-public interface Reducer<State> {
+public interface Reducer<S extends State> {
 
-    State reduce(State state);
+    S reduce(S state);
 }

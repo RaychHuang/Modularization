@@ -2,11 +2,11 @@ package com.ray.utopia.datacell;
 
 import io.reactivex.Observable;
 
-public interface DataCellShell<State, Message> extends DataCell<State, Message> {
+public interface DataCellShell<S extends State, M extends Message> extends DataCell<S, M> {
 
     Observable<Object> observeIntent();
 
-    void postReducer(Reducer<State> reducer);
+    void postReducer(Reducer<S> reducer);
 
-    void postMessage(Message reducer);
+    void postMessage(M reducer);
 }

@@ -1,6 +1,6 @@
 package com.ray.utopia.datacell;
 
-public interface Seed<State, Message> {
+public interface Seed<S extends State, M extends Message> {
 
-    void plant(DataCellShell<State, Message> shell);
+    void plant(DataCellShell<S, M> shell);
 }
