@@ -26,10 +26,8 @@ public abstract class BaseDataCell<S extends State, M extends Message> implement
         this.middleware = middleware;
     }
 
-    public synchronized void start() {
-        if (scheduler == null) {
-            scheduler = createScheduler();
-        }
+    public void create() {
+        scheduler = createScheduler();
 
         DataCellShellImpl<S, M> shell = new DataCellShellImpl<>(
                 intentPublisher, reducerPublisher, statePublisher, messagePublisher);
@@ -41,13 +39,12 @@ public abstract class BaseDataCell<S extends State, M extends Message> implement
         reducerPublisher
                 .observeOn(scheduler)
                 .scanWith(middleware.getInitialState(), this::handleReducer)
-                .distinctUntilChanged()
                 .subscribe(statePublisher);
 
         disposable.add(shell);
     }
 
-    public synchronized void stop() {
+    public void destroy() {
         disposable.clear();
     }
 
