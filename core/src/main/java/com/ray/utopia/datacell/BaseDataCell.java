@@ -12,58 +12,58 @@ import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
 public abstract class BaseDataCell<State, Message> implements DataCell<State, Message> {
-    private final PublishSubject<Object> mIntentPublisher = PublishSubject.create();
-    private final PublishSubject<Reducer<State>> mReducerPublisher = PublishSubject.create();
-    private final BehaviorSubject<State> mStatePublisher = BehaviorSubject.create();
-    private final PublishSubject<Message> mMessagePublisher = PublishSubject.create();
-    private final CompositeDisposable mDisposables = new CompositeDisposable();
+    private final PublishSubject<Object> intentPublisher = PublishSubject.create();
+    private final PublishSubject<Reducer<State>> reducerPublisher = PublishSubject.create();
+    private final BehaviorSubject<State> statePublisher = BehaviorSubject.create();
+    private final PublishSubject<Message> messagePublisher = PublishSubject.create();
+    private final CompositeDisposable disposable = new CompositeDisposable();
 
-    private final Middleware<State, Message> mMiddleware;
+    private final Middleware<State, Message> middleware;
 
     public BaseDataCell(@NonNull Middleware<State, Message> middleware) {
-        this.mMiddleware = middleware;
+        this.middleware = middleware;
     }
 
     public synchronized void start() {
         Scheduler scheduler = createScheduler();
         DataCellShellImpl<State, Message> shell = new DataCellShellImpl<>(
-                mIntentPublisher, mReducerPublisher, mStatePublisher, mMessagePublisher);
+                intentPublisher, reducerPublisher, statePublisher, messagePublisher);
 
-        for (Seed<State, Message> seed : mMiddleware.getSeeds()) {
+        for (Seed<State, Message> seed : middleware.getSeeds()) {
             seed.plant(shell);
         }
 
-        mReducerPublisher
+        reducerPublisher
                 .observeOn(scheduler)
-                .scanWith(mMiddleware.getInitialState(), this::handleReducer)
+                .scanWith(middleware.getInitialState(), this::handleReducer)
                 .distinctUntilChanged()
-                .subscribe(mStatePublisher);
+                .subscribe(statePublisher);
 
-        mDisposables.add(shell);
+        disposable.add(shell);
     }
 
     public synchronized void stop() {
-        mDisposables.clear();
+        disposable.clear();
     }
 
     @Override
     public <INTENT> void postIntent(INTENT intent) {
-        mIntentPublisher.onNext(intent);
+        intentPublisher.onNext(intent);
     }
 
     @Override
     public State getState() {
-        return mStatePublisher.getValue();
+        return statePublisher.getValue();
     }
 
     @Override
     public Observable<State> observeState() {
-        return mStatePublisher;
+        return statePublisher;
     }
 
     @Override
     public Observable<Message> observeMessage() {
-        return mMessagePublisher;
+        return messagePublisher;
     }
 
     protected String getName() {

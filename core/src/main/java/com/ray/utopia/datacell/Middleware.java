@@ -4,19 +4,19 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 public class Middleware<State, Message> {
-    private final Callable<State> mInitialState;
-    private final List<Seed<State, Message>> mSeeds;
+    private final Callable<State> initialState;
+    private final List<Seed<State, Message>> seeds;
 
     public Middleware(Callable<State> state, List<Seed<State, Message>> seeds) {
-        this.mInitialState = state;
-        this.mSeeds = seeds;
+        this.initialState = state;
+        this.seeds = seeds;
     }
 
     public Callable<State> getInitialState() {
-        return mInitialState;
+        return initialState;
     }
 
     public List<Seed<State, Message>> getSeeds() {
-        return mSeeds;
+        return seeds;
     }
 }

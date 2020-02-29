@@ -7,71 +7,71 @@ import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
 public class DataCellShellImpl<State, Message> implements DataCellShell<State, Message>, Disposable {
-    private final CompositeDisposable mDisposable;
-    private final PublishSubject<Object> mIntentPublisher;
-    private final PublishSubject<Reducer<State>> mReducerPublisher;
-    private final BehaviorSubject<State> mStatePublisher;
-    private final PublishSubject<Message> mMessagePublisher;
+    private final CompositeDisposable disposable;
+    private final PublishSubject<Object> intentPublisher;
+    private final PublishSubject<Reducer<State>> reducerPublisher;
+    private final BehaviorSubject<State> statePublisher;
+    private final PublishSubject<Message> messagePublisher;
 
     DataCellShellImpl(PublishSubject<Object> intentPublisher,
                       PublishSubject<Reducer<State>> reducerPublisher,
                       BehaviorSubject<State> statePublisher,
                       PublishSubject<Message> messagePublisher) {
-        mDisposable = new CompositeDisposable();
-        mIntentPublisher = intentPublisher;
-        mReducerPublisher = reducerPublisher;
-        mStatePublisher = statePublisher;
-        mMessagePublisher = messagePublisher;
+        this.disposable = new CompositeDisposable();
+        this.intentPublisher = intentPublisher;
+        this.reducerPublisher = reducerPublisher;
+        this.statePublisher = statePublisher;
+        this.messagePublisher = messagePublisher;
     }
 
     @Override
     public void dispose() {
-        mDisposable.dispose();
+        disposable.dispose();
     }
 
     @Override
     public boolean isDisposed() {
-        return mDisposable.isDisposed();
+        return disposable.isDisposed();
     }
 
     @Override
     public <INTENT> void postIntent(INTENT intent) {
         if (!isDisposed()) {
-            mIntentPublisher.onNext(intent);
+            intentPublisher.onNext(intent);
         }
     }
 
     @Override
     public Observable<Object> observeIntent() {
-        return mIntentPublisher.doOnSubscribe(mDisposable::add);
+        return intentPublisher.doOnSubscribe(disposable::add);
     }
 
     @Override
     public void postReducer(Reducer<State> reducer) {
         if (!isDisposed()) {
-            mReducerPublisher.onNext(reducer);
+            reducerPublisher.onNext(reducer);
         }
     }
 
     @Override
     public State getState() {
-        return mStatePublisher.getValue();
+        return statePublisher.getValue();
     }
 
     @Override
     public Observable<State> observeState() {
-        return mStatePublisher.doOnSubscribe(mDisposable::add);
+        return statePublisher.doOnSubscribe(disposable::add);
     }
 
     @Override
     public void postMessage(Message message) {
         if (!isDisposed()) {
-            mMessagePublisher.onNext(message);
+            messagePublisher.onNext(message);
         }
     }
 
     @Override
     public Observable<Message> observeMessage() {
-        return mMessagePublisher.doOnSubscribe(mDisposable::add);
+        return messagePublisher.doOnSubscribe(disposable::add);
     }
 }
