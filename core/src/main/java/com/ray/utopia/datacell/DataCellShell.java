@@ -4,9 +4,9 @@ import io.reactivex.Observable;
 
 public interface DataCellShell<State, Message> extends DataCell<State, Message> {
 
-    Observable<Object> listenIntent();
+    Observable<Object> observeIntent();
 
-    void deliverReducer(Reducer<State> reducer);
+    void postReducer(Reducer<State> reducer);
 
-    void deliverMessage(Message reducer);
+    void postMessage(Message reducer);
 }

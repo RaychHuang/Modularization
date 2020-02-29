@@ -35,19 +35,19 @@ public class DataCellShellImpl<State, Message> implements DataCellShell<State, M
     }
 
     @Override
-    public <INTENT> void deliverIntent(INTENT intent) {
+    public <INTENT> void postIntent(INTENT intent) {
         if (!isDisposed()) {
             mIntentPublisher.onNext(intent);
         }
     }
 
     @Override
-    public Observable<Object> listenIntent() {
+    public Observable<Object> observeIntent() {
         return mIntentPublisher.doOnSubscribe(mDisposable::add);
     }
 
     @Override
-    public void deliverReducer(Reducer<State> reducer) {
+    public void postReducer(Reducer<State> reducer) {
         if (!isDisposed()) {
             mReducerPublisher.onNext(reducer);
         }
@@ -59,19 +59,19 @@ public class DataCellShellImpl<State, Message> implements DataCellShell<State, M
     }
 
     @Override
-    public Observable<State> listenState() {
+    public Observable<State> observeState() {
         return mStatePublisher.doOnSubscribe(mDisposable::add);
     }
 
     @Override
-    public void deliverMessage(Message message) {
+    public void postMessage(Message message) {
         if (!isDisposed()) {
             mMessagePublisher.onNext(message);
         }
     }
 
     @Override
-    public Observable<Message> listenMessage() {
+    public Observable<Message> observeMessage() {
         return mMessagePublisher.doOnSubscribe(mDisposable::add);
     }
 }

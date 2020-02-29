@@ -47,7 +47,7 @@ public abstract class BaseDataCell<State, Message> implements DataCell<State, Me
     }
 
     @Override
-    public <INTENT> void deliverIntent(INTENT intent) {
+    public <INTENT> void postIntent(INTENT intent) {
         mIntentPublisher.onNext(intent);
     }
 
@@ -57,12 +57,12 @@ public abstract class BaseDataCell<State, Message> implements DataCell<State, Me
     }
 
     @Override
-    public Observable<State> listenState() {
+    public Observable<State> observeState() {
         return mStatePublisher;
     }
 
     @Override
-    public Observable<Message> listenMessage() {
+    public Observable<Message> observeMessage() {
         return mMessagePublisher;
     }
 
@@ -72,8 +72,7 @@ public abstract class BaseDataCell<State, Message> implements DataCell<State, Me
 
     protected Scheduler createScheduler() {
         String name = "DataCellThread - " + getName();
-        return Schedulers.from(Executors.newSingleThreadExecutor(
-                runnable -> new Thread(runnable, name)));
+        return Schedulers.from(Executors.newSingleThreadExecutor(r -> new Thread(r, name)));
     }
 
     protected ObservableSource<Reducer<State>> handleIntent(Object intent) {
@@ -81,8 +80,10 @@ public abstract class BaseDataCell<State, Message> implements DataCell<State, Me
     }
 
     protected State handleReducer(State oldState, Reducer<State> reducer) {
-        State newState = reducer.reduce(oldState);
-//        Log.d(getName(), "oldState: " + oldState + ", newState: " + newState);
-        return newState;
+        try {
+            return reducer.reduce(oldState);
+        } catch (Exception e) {
+            return oldState;
+        }
     }
 }

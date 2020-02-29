@@ -4,11 +4,11 @@ import io.reactivex.Observable;
 
 public interface DataCell<State, Message> {
 
-    <INTENT> void deliverIntent(INTENT intent);
+    <INTENT> void postIntent(INTENT intent);
 
     State getState();
 
-    Observable<State> listenState();
+    Observable<State> observeState();
 
-    Observable<Message> listenMessage();
+    Observable<Message> observeMessage();
 }
