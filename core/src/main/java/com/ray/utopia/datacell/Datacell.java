@@ -8,7 +8,7 @@ public interface Datacell<S extends State> {
 
   S getState();
 
-  Observable<S> observeState();
+  Observable<S> getRxState();
 
-  Observable<Message> observeMessage();
+  Observable<Message> getRxMessage();
 }

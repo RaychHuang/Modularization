@@ -1,18 +1,13 @@
 package com.ray.utopia.datacell;
 
-import java.util.concurrent.Executors;
-
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
 public abstract class BaseDatacell<S extends State> implements Datacell<S> {
-
-  private final CompositeDisposable disposable = new CompositeDisposable();
   private final PublishSubject<Object> intentPublisher = PublishSubject.create();
   private final PublishSubject<Reducer<S>> reducerPublisher = PublishSubject.create();
   private final BehaviorSubject<S> statePublisher = BehaviorSubject.create();
@@ -25,10 +20,9 @@ public abstract class BaseDatacell<S extends State> implements Datacell<S> {
   }
 
   public void create() {
-    Scheduler scheduler = createScheduler();
+    Scheduler scheduler = middleware.getScheduler(this.getClass());
 
     DatacellShellImpl<S> shell = new DatacellShellImpl<>(
-        disposable,
         intentPublisher,
         reducerPublisher,
         statePublisher,
@@ -40,12 +34,15 @@ public abstract class BaseDatacell<S extends State> implements Datacell<S> {
 
     reducerPublisher
         .observeOn(scheduler)
-        .scanWith(middleware.getState(), this::handleReducer)
+        .scanWith(middleware::getState, this::handleReducer)
         .subscribe(statePublisher);
   }
 
   public void destroy() {
-    disposable.clear();
+    statePublisher.onComplete();
+    messagePublisher.onComplete();
+    intentPublisher.onComplete();
+    reducerPublisher.onComplete();
   }
 
   @Override
@@ -59,22 +56,13 @@ public abstract class BaseDatacell<S extends State> implements Datacell<S> {
   }
 
   @Override
-  public Observable<S> observeState() {
+  public Observable<S> getRxState() {
     return statePublisher;
   }
 
   @Override
-  public Observable<Message> observeMessage() {
+  public Observable<Message> getRxMessage() {
     return messagePublisher;
-  }
-
-  protected String getName() {
-    return this.getClass().getSimpleName();
-  }
-
-  protected Scheduler createScheduler() {
-    String name = "DataCellThread - " + getName();
-    return Schedulers.from(Executors.newSingleThreadExecutor(r -> new Thread(r, name)));
   }
 
   protected S handleReducer(S oldState, Reducer<S> reducer) {
