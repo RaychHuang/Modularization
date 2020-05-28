@@ -1,14 +1,5 @@
 package com.ray.utopia.datacell;
 
-import io.reactivex.Observable;
-
-public interface Datacell<S extends State> {
-
-  <I> void sendIntent(I intent);
-
-  S getState();
-
-  Observable<S> getRxState();
-
-  Observable<Message> getRxMessage();
+public interface Datacell<L extends Ligand, S extends State, M extends Message>
+        extends Receptor<L>, Channel<S, M> {
 }
