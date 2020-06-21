@@ -3,16 +3,12 @@ package com.ray.utopia.datacell;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.annotations.NonNull;
-import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
-public abstract class BaseDatacell<L extends Ligand, S extends State, M extends Message>
-        implements Datacell<L, S, M> {
-    private final PublishSubject<Object> intentPublisher = PublishSubject.create();
+public abstract class BaseDatacell<S extends State> implements StateOwner<S> {
     private final PublishSubject<Reducer<S>> reducerPublisher = PublishSubject.create();
     private final BehaviorSubject<S> statePublisher = BehaviorSubject.create();
-    private final PublishSubject<M> messagePublisher = PublishSubject.create();
 
     private final Middleware<S> middleware;
 
@@ -22,12 +18,12 @@ public abstract class BaseDatacell<L extends Ligand, S extends State, M extends 
 
     public void create() {
         Scheduler scheduler = middleware.getScheduler(this.getClass());
+        Media media = middleware.getMedia();
 
         DatacellShellImpl<S> shell = new DatacellShellImpl<>(
-                intentPublisher,
+
                 reducerPublisher,
-                statePublisher,
-                messagePublisher);
+                statePublisher);
 
         for (Seed<S> seed : middleware.getSeeds()) {
             seed.plant(shell);
@@ -35,7 +31,7 @@ public abstract class BaseDatacell<L extends Ligand, S extends State, M extends 
 
         reducerPublisher
                 .observeOn(scheduler)
-                .scanWith(middleware::getState, this::handleReducer)
+                .scanWith(middleware::getInitState, this::handleReducer)
                 .subscribe(statePublisher);
     }
 
@@ -47,8 +43,8 @@ public abstract class BaseDatacell<L extends Ligand, S extends State, M extends 
     }
 
     @Override
-    public void signal(L intent) {
-        intentPublisher.onNext(intent);
+    public void send(L Message) {
+        intentPublisher.onNext(Message);
     }
 
     @Override

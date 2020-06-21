@@ -2,11 +2,13 @@ package com.ray.utopia.datacell;
 
 import io.reactivex.Observable;
 
-public interface DatacellShell<S extends State> extends Datacell<S> {
+public interface DatacellShell<S extends State> {
 
-  Observable<Object> observeIntent();
+    S getState();
 
-  void postReducer(Reducer<S> reducer);
+    Observable<S> getRxState();
 
-  void postMessage(Message message);
+    Media getMedia();
+
+    void postReducer(Reducer<S> reducer);
 }

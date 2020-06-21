@@ -9,13 +9,13 @@ import java.util.concurrent.Executors;
 public abstract class Middleware<S extends State> {
   private final List<Seed<S>> seeds = new ArrayList<>();
 
-  abstract S getState();
+  abstract S getInitState();
+
+  abstract Media getMedia();
 
   List<Seed<S>> getSeeds() {
     return seeds;
   }
-
-
 
   protected Scheduler getScheduler(Class clazz) {
     String name = "DatacellThread - " + clazz.getSimpleName();
