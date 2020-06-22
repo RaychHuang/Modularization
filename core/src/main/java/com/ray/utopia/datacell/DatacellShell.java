@@ -4,11 +4,13 @@ import io.reactivex.Observable;
 
 public interface DatacellShell<S extends State> {
 
-    S getState();
+    S getCurState();
 
-    Observable<S> getRxState();
+    Observable<S> getState();
 
-    Media getMedia();
+    void post(Message message);
+
+    Observable<Message> getMessage();
 
     void postReducer(Reducer<S> reducer);
 }

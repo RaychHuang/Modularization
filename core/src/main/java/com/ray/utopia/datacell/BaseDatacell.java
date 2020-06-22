@@ -6,69 +6,59 @@ import io.reactivex.annotations.NonNull;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
-public abstract class BaseDatacell<S extends State> implements StateOwner<S> {
-    private final PublishSubject<Reducer<S>> reducerPublisher = PublishSubject.create();
-    private final BehaviorSubject<S> statePublisher = BehaviorSubject.create();
+public abstract class BaseDatacell<S extends State> implements Datacell<S> {
 
-    private final Middleware<S> middleware;
+  private final PublishSubject<Reducer<S>> reducerPublisher = PublishSubject.create();
+  private final BehaviorSubject<S> statePublisher = BehaviorSubject.create();
 
-    public BaseDatacell(@NonNull Middleware<S> middleware) {
-        this.middleware = middleware;
+  private final Middleware<S> middleware;
+
+  public BaseDatacell(@NonNull Middleware<S> middleware) {
+    this.middleware = middleware;
+  }
+
+  public void create() {
+    Scheduler scheduler = middleware.getScheduler(this.getClass());
+    Messenger messenger = middleware.getMessenger();
+
+    DatacellShellImpl<S> shell = new DatacellShellImpl<>(
+        this,
+        messenger,
+        reducerPublisher);
+
+    for (Usecase<S> usecase : middleware.getUsecases()) {
+      usecase.apply(shell);
     }
 
-    public void create() {
-        Scheduler scheduler = middleware.getScheduler(this.getClass());
-        Media media = middleware.getMedia();
+    reducerPublisher
+        .observeOn(scheduler)
+        .scanWith(middleware::getInitState, this::handleReducer)
+        .subscribe(statePublisher);
+  }
 
-        DatacellShellImpl<S> shell = new DatacellShellImpl<>(
+  public void destroy() {
+    statePublisher.onComplete();
+    reducerPublisher.onComplete();
+  }
 
-                reducerPublisher,
-                statePublisher);
+  @Override
+  public S getCurState() {
 
-        for (Seed<S> seed : middleware.getSeeds()) {
-            seed.plant(shell);
-        }
+    return statePublisher.getValue();
+  }
 
-        reducerPublisher
-                .observeOn(scheduler)
-                .scanWith(middleware::getInitState, this::handleReducer)
-                .subscribe(statePublisher);
-    }
+  @Override
+  public Observable<S> getState() {
+    return statePublisher;
+  }
 
-    public void destroy() {
-        statePublisher.onComplete();
-        messagePublisher.onComplete();
-        intentPublisher.onComplete();
-        reducerPublisher.onComplete();
-    }
-
-    @Override
-    public void send(L Message) {
-        intentPublisher.onNext(Message);
-    }
-
-    @Override
-    public S getState() {
-        return statePublisher.getValue();
-    }
-
-    @Override
-    public Observable<S> getRxState() {
-        return statePublisher;
-    }
-
-    @Override
-    public Observable<M> getRxMessage() {
-        return messagePublisher;
-    }
-
-    protected S handleReducer(S oldState, Reducer<S> reducer) {
-        try {
-            return reducer.reduce(oldState);
-        } catch (Throwable e) {
-            Throwable datacellException = new DatacellException(e);
+  protected S handleReducer(S oldState, Reducer<S> reducer) {
+    try {
+      return reducer.reduce(oldState);
+    } catch (Throwable e) {
+      Throwable datacellException = new DatacellException(e);
 //            messagePublisher.onNext(() -> datacellException);
-            return oldState;
-        }
+      return oldState;
     }
+  }
 }

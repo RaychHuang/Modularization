@@ -4,7 +4,7 @@ import io.reactivex.Observable;
 
 public interface Datacell<S extends State> {
 
-    S getState();
+    S getCurState();
 
-    Observable<S> getRxState();
+    Observable<S> getState();
 }

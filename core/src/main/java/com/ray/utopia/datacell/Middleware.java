@@ -7,14 +7,14 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 public abstract class Middleware<S extends State> {
-  private final List<Seed<S>> seeds = new ArrayList<>();
+  private final List<Usecase<S>> usecases = new ArrayList<>();
 
   abstract S getInitState();
 
-  abstract Media getMedia();
+  abstract Messenger getMessenger();
 
-  List<Seed<S>> getSeeds() {
-    return seeds;
+  List<Usecase<S>> getUsecases() {
+    return usecases;
   }
 
   protected Scheduler getScheduler(Class clazz) {

@@ -2,9 +2,9 @@ package com.ray.utopia.datacell;
 
 import io.reactivex.Observable;
 
-public interface Media {
+public interface Messenger {
 
-    void publish(Message message);
+    void post(Message message);
 
     Observable<Message> getMessage();
 }
